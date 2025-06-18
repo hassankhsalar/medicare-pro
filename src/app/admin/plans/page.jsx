@@ -22,64 +22,124 @@ const PlansPage = () => {
   }, []);
 
   const handleDelete = async (id) => {
-  const confirmDelete = confirm('Are you sure you want to delete this plan?')
-  if (!confirmDelete) return
+    const confirmDelete = confirm("Are you sure you want to delete this plan?");
+    if (!confirmDelete) return;
 
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) return toast.error('Token not found')
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return toast.error("Token not found");
 
-    console.log('Deleting plan with ID:', id)
+      await axios.delete(`/admin/plans/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    await axios.delete(`/admin/plans/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    toast.success('Plan deleted successfully')
-    setPlans((prev) => prev.filter((plan) => plan._id !== id))
-  } catch (err) {
-    console.error(err)
-    toast.error(err?.response?.data?.message || 'Failed to delete plan')
-  }
-}
+      toast.success("Plan deleted successfully");
+      setPlans((prev) => prev.filter((plan) => plan._id !== id));
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to delete plan");
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">All Subscription Plans</h1>
-        <Link
-          href="/admin/plans/add"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Add New Plan
-        </Link>
-      </div>
-      <div className="grid gap-4">
-        {plans.map((plan) => (
-          <div key={plan._id} className="border p-4 rounded shadow">
-            <h2 className="text-xl font-semibold">{plan.name}</h2>
-            <p>Price: ${plan.price}</p>
-            <p>Duration: {plan.durationInDays} days</p>
-            <div className="mt-2 flex gap-2">
-              <Link
-                href={`/admin/plans/${plan._id}`}
-                className="text-blue-600 hover:underline"
+    <section className="py-20 dark:bg-gray-100 dark:text-gray-800">
+      <div className="container px-4 mx-auto">
+        <div className="max-w-2xl mx-auto mb-16 text-center">
+          
+          <h2 className="text-4xl font-bold lg:text-5xl">
+            Active Subscription Plans
+          </h2>
+        </div>
+
+        <div className="flex flex-wrap items-stretch -mx-4">
+          {plans.map((plan, idx) => (
+            <div
+              key={plan._id}
+              className="flex w-full mb-8 sm:px-4 md:w-1/2 lg:w-72 lg:mb-0"
+            >
+              <div
+                className={`flex flex-grow flex-col p-6 space-y-6 rounded shadow sm:p-8 ${
+                  idx % 2 === 1
+                    ? "dark:bg-violet-600 dark:text-gray-50"
+                    : "dark:bg-gray-50 dark:text-gray-800"
+                }`}
               >
-                View Details
-              </Link>
-              <button
-                onClick={() => handleDelete(plan._id)}
-                className="text-red-600 hover:underline"
-              >
-                Delete
-              </button>
+                <div className="space-y-2">
+                  <h4 className="text-2xl font-bold">{plan.name}</h4>
+                  <span className="text-6xl font-bold">
+                    ${plan.price}
+                    <span className="text-sm tracking-wide">
+                      /{plan.durationInDays}d
+                    </span>
+                  </span>
+                </div>
+                <p className="leading-relaxed">
+                  {plan.description || "No description provided."}
+                </p>
+                <ul className="flex-1 space-y-2">
+                  {plan.features?.length ? (
+                    plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start space-x-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          className="flex-shrink-0 w-6 h-6 dark:text-violet-600"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{feature}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-gray-400 italic">No features listed</li>
+                  )}
+                </ul>
+                <div className="mt-4 flex gap-3">
+                  <Link
+                    href={`/admin/plans/${plan._id}`}
+                    className={`inline-block px-4 py-2 rounded font-semibold tracking-wide text-center ${
+                      idx % 2 === 1
+                        ? "bg-white text-violet-600"
+                        : "dark:bg-violet-600 dark:text-white"
+                    }`}
+                  >
+                    View Details
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(plan._id)}
+                    className="px-4 py-2 rounded bg-red-600 text-white font-semibold tracking-wide"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+
+          {plans.length === 0 && (
+            <p className="text-center text-gray-500 w-full">
+              No subscription plans available.
+            </p>
+          )}
+        </div>
+
+        <div className="text-center mt-12">
+          <Link
+            href="/admin/plans/add"
+            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold tracking-wide"
+          >
+            + Add New Plan
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 
